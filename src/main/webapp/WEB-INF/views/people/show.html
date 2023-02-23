@@ -1,10 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title th:text="${person.fullName}">Client</title>
 </head>
 <body>
-$END$
+<p th:text="${'Name: ' + person.getFullName() + ', ' + person.getYearOfBirth()}">VALUE</p>
+<p th:text="${'Id: ' + person.getId()}">VALUE</p>
+
+<div th:if="${books.isEmpty()}">
+    <p>Человек пока не взял ни одной книги</p>
+    <hr/>
+</div>
+
+<div th:if="${!books.isEmpty()}">
+    <hr/>
+    <p>Книги: </p>
+    <table th:each="book : ${books}">
+        <tr th:text="${book.getTitle() + ', ' + book.getAuthor() + ', ' + book.getYearOfPublication()} ">book</tr>
+        <tr> </tr>
+        <tr>
+            <form th:method="GET" th:action="@{/books/{id}(id=${book.getId()})}">
+            <input type="submit" value="Перейти!">
+        </form>
+        </tr>
+    </table>
+    <hr/>
+</div>
+
+<form th:method="GET" th:action="@{/people/{id}/edit(id=${person.getId()})}">
+    <input type="submit" value="Редактировать!">
+</form>
+<br/>
+<form th:method="DELETE" th:action="@{/people/{id}(id=${person.getId()})}">
+    <input type="submit" value="Delete"/>
+</form>
+
+<br/>
+<a href="/people">Назад</a>
 </body>
 </html>

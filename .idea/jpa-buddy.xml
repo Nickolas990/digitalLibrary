@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="JpaBuddyIdeaProjectConfig">
+  <component name="JpaBuddyIdeaProjectConfig" reUseTableSchema="true">
+    <option name="defaultUnitInitialized" value="true" />
     <option name="renamerInitialized" value="true" />
+    <option name="reverseEngineeringLastDbConnectionId" value="eb1793f4-f0d7-4f58-8988-78dbfdd2b39f" />
+    <option name="reLastEntityCreationPackage" value="src/main/java/org/melnikov/digitalLibrary/models" />
   </component>
 </project>

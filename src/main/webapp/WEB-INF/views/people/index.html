@@ -1,10 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Список клиентов</title>
 </head>
 <body>
-$END$
+
+<div th:each="person : ${people}">
+    <a th:href="@{/people/{id}(id=${person.getId()})}" th:text="${person.getFullName() + ', ' + person.getYearOfBirth()}">user</a>
+</div>
+<br/>
+<hr/>
+
+<a href="/people/new">Создать новую карточку клиента</a>
+<a href="/books">Перейти к списку книг</a>
+
 </body>
 </html>
