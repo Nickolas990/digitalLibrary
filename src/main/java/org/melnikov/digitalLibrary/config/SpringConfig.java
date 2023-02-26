@@ -1,5 +1,8 @@
 package org.melnikov.digitalLibrary.config;
 
+import org.hibernate.SessionFactory;
+import org.melnikov.digitalLibrary.models.Book;
+import org.melnikov.digitalLibrary.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -75,6 +78,19 @@ public class SpringConfig implements WebMvcConfigurer {
     @Bean
     public JdbcTemplate jdbcTemplate() {
         return new JdbcTemplate(dataSource());
+    }
+
+    @Bean
+    public org.hibernate.cfg.Configuration hibernateConfiguration() {
+        org.hibernate.cfg.Configuration configuration = new org.hibernate.cfg.Configuration();
+        configuration.addAnnotatedClass(Book.class);
+        configuration.addAnnotatedClass(Person.class);
+        return configuration;
+    }
+
+    @Bean
+    public SessionFactory sessionFactory() {
+        return hibernateConfiguration().buildSessionFactory();
     }
 
 

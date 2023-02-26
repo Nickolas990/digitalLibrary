@@ -31,4 +31,7 @@ public class Person {
     @Min(value = 1900, message = "Year of birth must be at least 1900")
     @Digits(integer = 4, fraction = 0, message = "Year of birth must be four digits")
     private Integer yearOfBirth;
+
+    @OneToMany(mappedBy = "person")
+    private List<Book> books;
 }

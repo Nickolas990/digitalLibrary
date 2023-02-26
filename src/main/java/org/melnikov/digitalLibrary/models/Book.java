@@ -20,13 +20,11 @@ public class Book {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Lob
     @Column(name = "title")
     @NotEmpty
     @Size(min = 1, max = 100, message = "Title must be between 1 and 100 characters")
     private String title;
 
-    @Lob
     @Column(name = "author")
     @NotNull
     @NotEmpty
@@ -37,7 +35,8 @@ public class Book {
     @NotNull
     private Integer yearOfPublication;
 
-    @Column(name = "person_id")
-    private Integer personId;
+    @ManyToOne
+    @JoinColumn(name = "person_id", referencedColumnName = "id")
+    private Person person;
 
 }
