@@ -1,5 +1,7 @@
 package org.melnikov.digitalLibrary.repositories;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.melnikov.digitalLibrary.mappers.BookMapper;
 import org.melnikov.digitalLibrary.mappers.PersonMapper;
 import org.melnikov.digitalLibrary.models.Book;
@@ -25,45 +27,55 @@ public class BooksRepository implements ListCrudRepository<Book, Integer> {
 
     private final JdbcTemplate jdbcTemplate;
 
+    private final SessionFactory sessionFactory;
+
+
+
     @Autowired
-    public BooksRepository(JdbcTemplate jdbcTemplate) {
+    public BooksRepository(JdbcTemplate jdbcTemplate, SessionFactory sessionFactory) {
         this.jdbcTemplate = jdbcTemplate;
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
     public <S extends Book> S save(S book) {
-        jdbcTemplate.update("INSERT INTO book (title, author, year_of_publication) VALUES(?,?,?)",
-                book.getTitle(), book.getAuthor(), book.getYearOfPublication());
-        return book;
+
+        try (Session session = sessionFactory.openSession()) {
+           session.beginTransaction();
+           session.persist(book);
+           session.getTransaction().commit();
+           return book;
+       }
     }
 
     @Override
     public <S extends Book> List<S> saveAll(Iterable<S> entities) {
         List<S> books = new ArrayList<>((Collection<S>) entities);
-        jdbcTemplate.batchUpdate("INSERT INTO book (title, author, year_of_publication) VALUES(?,?,?)", new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                ps.setString(1, books.get(i).getTitle());
-                ps.setString(2, books.get(i).getAuthor());
-                ps.setInt(3, books.get(i).getYearOfPublication());
-            }
-
-            @Override
-            public int getBatchSize() {
-                return books.size();
-            }
-        });
+        try(Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            books.forEach(session::persist);
+            session.getTransaction().commit();
+        }
         return books;
     }
 
     public void update(int id, Book updatedBook) {
-        jdbcTemplate.update("UPDATE book SET title =?, author = ?, year_of_publication = ? WHERE id = ?",
-                updatedBook.getTitle(), updatedBook.getAuthor(), updatedBook.getYearOfPublication(), id);
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            Book book = session.get(Book.class, id);
+            book.setTitle(updatedBook.getTitle());
+            book.setAuthor(updatedBook.getAuthor());
+            book.setYearOfPublication(updatedBook.getYearOfPublication());
+            session.refresh(book);
+            session.getTransaction().commit();
+        }
     }
 
     @Override
     public List<Book> findAll() {
-        return jdbcTemplate.query("SELECT * FROM book", new BookMapper());
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("from Book", Book.class).getResultList();
+        }
     }
 
     @Override

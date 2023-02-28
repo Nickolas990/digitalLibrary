@@ -1,19 +1,12 @@
 package org.melnikov.digitalLibrary.repositories;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.melnikov.digitalLibrary.mappers.BookMapper;
-import org.melnikov.digitalLibrary.mappers.PersonMapper;
-import org.melnikov.digitalLibrary.models.Book;
 import org.melnikov.digitalLibrary.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.ListCrudRepository;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,12 +18,10 @@ import java.util.Optional;
 @Component
 public class PersonRepository implements ListCrudRepository<Person, Integer> {
 
-    private final JdbcTemplate jdbcTemplate;
     private final SessionFactory sessionFactory;
 
     @Autowired
-    public PersonRepository(JdbcTemplate jdbcTemplate, SessionFactory sessionFactory) {
-        this.jdbcTemplate = jdbcTemplate;
+    public PersonRepository(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
     }
 
@@ -53,18 +44,6 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
             people.forEach(session::persist);
             session.getTransaction().commit();
         }
-//        jdbcTemplate.batchUpdate("INSERT INTO person (full_name, year_of_birth) VALUES(?,?)", new BatchPreparedStatementSetter() {
-//            @Override
-//            public void setValues(PreparedStatement ps, int i) throws SQLException {
-//                ps.setString(1, people.get(i).getFullName());
-//                ps.setInt(2, people.get(i).getYearOfBirth());
-//            }
-//
-//            @Override
-//            public int getBatchSize() {
-//                return people.size();
-//            }
-//        });
         return people;
     }
 
@@ -72,16 +51,13 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
     public Optional<Person> findById(Integer id) {
         try (Session session = sessionFactory.openSession()) {
             Person person = session.get(Person.class, id);
+            Hibernate.initialize(person.getBooks());
             return Optional.ofNullable(person);
         }
     }
 
     @Override
     public boolean existsById(Integer id) {
-//        return jdbcTemplate.query("SELECT * FROM person WHERE id = ?", new PersonMapper(), id)
-//                .stream()
-//                .findFirst()
-//                .isPresent();
         try(Session session = sessionFactory.openSession()) {
             Person person = session.get(Person.class, id);
             return  Optional.ofNullable(person).isPresent();
@@ -93,8 +69,6 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
       try (Session session = sessionFactory.openSession()) {
           return session.createQuery("from Person p", Person.class).getResultList();
       }
-
-//        return jdbcTemplate.query("SELECT * FROM person", new PersonMapper());
     }
 
     @Override
@@ -114,15 +88,10 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
                     .stream()
                     .findFirst();
         }
-//        return jdbcTemplate.query("SELECT * FROM person WHERE full_name =?", new PersonMapper(), fullName)
-//                .stream()
-//                .findFirst();
-
     }
 
     @Override
     public long count() {
-//        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM person", Long.class);
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("select count(p) from Person p", Long.class)
                     .getResultStream()
@@ -138,7 +107,6 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
             session.delete(person);
             session.getTransaction().commit();
         }
-//        jdbcTemplate.update("DELETE FROM person WHERE id =?", id);
 
     }
 
@@ -150,8 +118,6 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
             session.remove(person);
             session.getTransaction().commit();
         }
-
-//        jdbcTemplate.update("DELETE FROM person WHERE full_name =?", personToDelete.getFullName());
     }
 
     @Override
@@ -161,20 +127,6 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
             session.createQuery("delete from Person p where p.id in (:ids)", Person.class)
                     .setParameter("ids", ints);
         }
-
-//        List<Integer> ids = new ArrayList<>((Collection) ints);
-//        jdbcTemplate.batchUpdate("DELETE FROM person WHERE id =?", new BatchPreparedStatementSetter() {
-//            @Override
-//            public void setValues(PreparedStatement ps, int i) throws SQLException {
-//                ps.setLong(1, ints.iterator().next());
-//            }
-//
-//            @Override
-//            public int getBatchSize() {
-//                return ids.size();
-//            }
-//        });
-
     }
 
     @Override
@@ -187,17 +139,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
                         .executeUpdate();
             }
         }
-//        jdbcTemplate.batchUpdate("DELETE FROM person WHERE id = ?", new BatchPreparedStatementSetter() {
-//            @Override
-//            public void setValues(PreparedStatement ps, int i) throws SQLException {
-//                ps.setLong(1, entities.iterator().next().getId());
-//            }
-//
-//            @Override
-//            public int getBatchSize() {
-//                return people.size();
-//            }
-//        });
+
     }
 
     @Override
@@ -212,19 +154,21 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
 
 
     public void update(int id, Person updatedPerson) {
-//        jdbcTemplate.update("UPDATE person SET full_name =?, year_of_birth = ? WHERE id = ?",
-//                updatedPerson.getFullName(), updatedPerson.getYearOfBirth(), id);
 
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.createQuery("update Person p set p.fullName = :fullName, p.yearOfBirth = :yearOfBirth where p.id = :id", Person.class)
-                    .setParameter("fullName", updatedPerson.getFullName())
-                    .setParameter("yearOfBirth", updatedPerson.getYearOfBirth())
-                    .setParameter("id", id);
+            Person person = session.get(Person.class, id);
+            person.setFullName(updatedPerson.getFullName());
+            person.setYearOfBirth(updatedPerson.getYearOfBirth());
+            session.refresh(person);
+            session.getTransaction().commit();
         }
     }
 
-    public List<Book> getBooksByPersonId(int id) {
-        return jdbcTemplate.query("SELECT * FROM book WHERE person_id =?", new BookMapper(), id);
-    }
+//    public List<Book> getBooksByPersonId(int id) {
+//        try (Session session = sessionFactory.openSession()) {
+//            Person person = session.get(Person.class, id);
+//            return person.getBooks();
+//        }
+//    }
 }

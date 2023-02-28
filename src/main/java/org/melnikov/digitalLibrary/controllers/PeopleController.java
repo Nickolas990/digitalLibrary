@@ -57,10 +57,8 @@ public class PeopleController {
     @GetMapping("/{id}")
     public String show(@PathVariable("id") int id, Model model) {
         Optional<Person> personToShow = personRepository.findById(id);
-        if (personToShow.isPresent()) {
-            model.addAttribute("person", personToShow.get());
-            model.addAttribute("books", personRepository.getBooksByPersonId(id));
-        }
+        personToShow.ifPresent(person -> model.addAttribute("person", person));
+        personToShow.ifPresent(person -> model.addAttribute("books", person.getBooks()));
         return "people/show";
     }
 

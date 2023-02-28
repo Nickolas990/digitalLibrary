@@ -5,6 +5,8 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.List;
 
@@ -32,6 +34,11 @@ public class Person {
     @Digits(integer = 4, fraction = 0, message = "Year of birth must be four digits")
     private Integer yearOfBirth;
 
-    @OneToMany(mappedBy = "person")
+    @OneToMany(mappedBy = "client")
     private List<Book> books;
+
+    @PreRemove
+    private void preRemove() {
+        books.forEach(book -> book.setClient(null));
+    }
 }
