@@ -9,14 +9,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4248091f-3b28-4770-92af-d2f578f0ee91" name="Changes" comment="Modified for hibernate">
+    <list default="true" id="4248091f-3b28-4770-92af-d2f578f0ee91" name="Changes" comment="added hibernate queries in BookRepository. JDBCtemplate removed.">
+      <change afterPath="$PROJECT_DIR$/src/main/resources/database.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/controllers/PeopleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/controllers/PeopleController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/models/Book.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/models/Book.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/models/Person.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/models/Person.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/repositories/BooksRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/repositories/BooksRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/repositories/PersonRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/melnikov/digitalLibrary/repositories/PersonRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/views/books/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/views/books/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -299,7 +300,7 @@
       <updated>1676841594095</updated>
       <workItem from="1676841595261" duration="2754000" />
       <workItem from="1676844374056" duration="90006000" />
-      <workItem from="1677444338065" duration="9751000" />
+      <workItem from="1677444338065" duration="21360000" />
     </task>
     <task id="LOCAL-00001" summary="Created digital structure for library">
       <created>1677189379745</created>
@@ -315,7 +316,14 @@
       <option name="project" value="LOCAL" />
       <updated>1677445248150</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="added hibernate queries in PeopleRepository">
+      <created>1677607477753</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1677607477753</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -335,7 +343,9 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Created digital structure for library" />
     <MESSAGE value="Modified for hibernate" />
-    <option name="LAST_COMMIT_MESSAGE" value="Modified for hibernate" />
+    <MESSAGE value="added hibernate queries in PeopleRepository" />
+    <MESSAGE value="added hibernate queries in BookRepository. JDBCtemplate removed." />
+    <option name="LAST_COMMIT_MESSAGE" value="added hibernate queries in BookRepository. JDBCtemplate removed." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

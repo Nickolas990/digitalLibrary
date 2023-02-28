@@ -73,7 +73,6 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
 
     @Override
     public List<Person> findAllById(Iterable<Integer> ids) {
-//        return jdbcTemplate.query("SELECT * FROM person WHERE id =?", new PersonMapper(), ints);
         try(Session session = sessionFactory.openSession()) {
             return session.createQuery("from Person p where p.id in (:ids)", Person.class)
                     .setParameter("ids", ids)
@@ -94,8 +93,19 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
     public long count() {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("select count(p) from Person p", Long.class)
-                    .getResultStream()
-                    .count();
+                    .getSingleResult();
+        }
+    }
+
+    public void update(int id, Person updatedPerson) {
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            Person person = session.get(Person.class, id);
+            person.setFullName(updatedPerson.getFullName());
+            person.setYearOfBirth(updatedPerson.getYearOfBirth());
+            session.merge(person);
+            session.getTransaction().commit();
         }
     }
 
@@ -104,7 +114,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
             Person person = session.get(Person.class, id);
-            session.delete(person);
+            session.remove(person);
             session.getTransaction().commit();
         }
 
@@ -126,6 +136,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
             session.beginTransaction();
             session.createQuery("delete from Person p where p.id in (:ids)", Person.class)
                     .setParameter("ids", ints);
+            session.getTransaction().commit();
         }
     }
 
@@ -137,9 +148,9 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
                 session.createQuery("delete from Person p where p.id = :id", Person.class)
                         .setParameter("id", person.getId())
                         .executeUpdate();
+                session.getTransaction().commit();
             }
         }
-
     }
 
     @Override
@@ -153,17 +164,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
     }
 
 
-    public void update(int id, Person updatedPerson) {
 
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            Person person = session.get(Person.class, id);
-            person.setFullName(updatedPerson.getFullName());
-            person.setYearOfBirth(updatedPerson.getYearOfBirth());
-            session.refresh(person);
-            session.getTransaction().commit();
-        }
-    }
 
 //    public List<Book> getBooksByPersonId(int id) {
 //        try (Session session = sessionFactory.openSession()) {

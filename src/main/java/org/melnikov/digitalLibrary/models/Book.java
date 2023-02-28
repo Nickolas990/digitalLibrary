@@ -39,4 +39,9 @@ public class Book {
     @JoinColumn(name = "person_id", referencedColumnName = "id")
     private Person client;
 
+    @PreRemove
+    public void preRemove() {
+        client.getBooks().remove(this);
+    }
+
 }
