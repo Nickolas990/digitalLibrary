@@ -1,17 +1,12 @@
 package org.melnikov.digitalLibrary.repositories;
 
-import org.melnikov.digitalLibrary.mappers.BookMapper;
-import org.melnikov.digitalLibrary.mappers.PersonMapper;
-import org.melnikov.digitalLibrary.models.Book;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.melnikov.digitalLibrary.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.ListCrudRepository;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,131 +18,158 @@ import java.util.Optional;
 @Component
 public class PersonRepository implements ListCrudRepository<Person, Integer> {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final SessionFactory sessionFactory;
 
     @Autowired
-    public PersonRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public PersonRepository(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
     public <S extends Person> S save(S person) {
-        jdbcTemplate.update("INSERT INTO person (full_name, year_of_birth) VALUES(?,?)",
-                person.getFullName(), person.getYearOfBirth());
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.persist(person);
+            session.getTransaction().commit();
+        }
         return person;
     }
 
     @Override
     public <S extends Person> List<S> saveAll(Iterable<S> entities) {
         List<S> people = new ArrayList<>((Collection<S>) entities);
-        jdbcTemplate.batchUpdate("INSERT INTO person (full_name, year_of_birth) VALUES(?,?)", new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                ps.setString(1, people.get(i).getFullName());
-                ps.setInt(2, people.get(i).getYearOfBirth());
-            }
-
-            @Override
-            public int getBatchSize() {
-                return people.size();
-            }
-        });
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            people.forEach(session::persist);
+            session.getTransaction().commit();
+        }
         return people;
     }
 
     @Override
     public Optional<Person> findById(Integer id) {
-        return jdbcTemplate.query("SELECT * FROM person WHERE id = ?", new PersonMapper(), id)
-                .stream()
-                .findFirst();
+        try (Session session = sessionFactory.openSession()) {
+            Person person = session.get(Person.class, id);
+            Hibernate.initialize(person.getBooks());
+            return Optional.ofNullable(person);
+        }
     }
 
     @Override
     public boolean existsById(Integer id) {
-        return jdbcTemplate.query("SELECT * FROM person WHERE id = ?", new PersonMapper(), id)
-                .stream()
-                .findFirst()
-                .isPresent();
+        try(Session session = sessionFactory.openSession()) {
+            Person person = session.get(Person.class, id);
+            return  Optional.ofNullable(person).isPresent();
+        }
     }
 
     @Override
     public List<Person> findAll() {
-        return jdbcTemplate.query("SELECT * FROM person", new PersonMapper());
+      try (Session session = sessionFactory.openSession()) {
+          return session.createQuery("from Person p", Person.class).getResultList();
+      }
     }
 
     @Override
-    public List<Person> findAllById(Iterable<Integer> ints) {
-        return jdbcTemplate.query("SELECT * FROM person WHERE id =?", new PersonMapper(), ints);
+    public List<Person> findAllById(Iterable<Integer> ids) {
+        try(Session session = sessionFactory.openSession()) {
+            return session.createQuery("from Person p where p.id in (:ids)", Person.class)
+                    .setParameter("ids", ids)
+                    .getResultList();
+        }
     }
 
     public Optional<Person> findByName(String fullName) {
-        return jdbcTemplate.query("SELECT * FROM person WHERE full_name =?", new PersonMapper(), fullName)
-                .stream()
-                .findFirst();
-
+        try(Session session = sessionFactory.openSession()) {
+            return session.createQuery("from Person p where p.fullName = :fullName", Person.class)
+                    .setParameter("fullName", fullName)
+                    .stream()
+                    .findFirst();
+        }
     }
 
     @Override
     public long count() {
-        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM person", Long.class);
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery("select count(p) from Person p", Long.class)
+                    .getSingleResult();
+        }
+    }
+
+    public void update(int id, Person updatedPerson) {
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            Person person = session.get(Person.class, id);
+            person.setFullName(updatedPerson.getFullName());
+            person.setYearOfBirth(updatedPerson.getYearOfBirth());
+            session.merge(person);
+            session.getTransaction().commit();
+        }
     }
 
     @Override
     public void deleteById(Integer id) {
-        jdbcTemplate.update("DELETE FROM person WHERE id =?", id);
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            Person person = session.get(Person.class, id);
+            session.remove(person);
+            session.getTransaction().commit();
+        }
 
     }
 
     @Override
-    public void delete(Person entity) {
-        jdbcTemplate.update("DELETE FROM person WHERE full_name =?", entity.getFullName());
+    public void delete(Person personToDelete) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            Person person = session.get(Person.class, personToDelete.getId());
+            session.remove(person);
+            session.getTransaction().commit();
+        }
     }
 
     @Override
     public void deleteAllById(Iterable<? extends Integer> ints) {
-        List<Integer> ids = new ArrayList<>((Collection) ints);
-        jdbcTemplate.batchUpdate("DELETE FROM person WHERE id =?", new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                ps.setLong(1, ints.iterator().next());
-            }
-
-            @Override
-            public int getBatchSize() {
-                return ids.size();
-            }
-        });
-
+        try(Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.createQuery("delete from Person p where p.id in (:ids)", Person.class)
+                    .setParameter("ids", ints);
+            session.getTransaction().commit();
+        }
     }
 
     @Override
     public void deleteAll(Iterable<? extends Person> entities) {
-        List<Person> people = new ArrayList<>((Collection) entities);
-        jdbcTemplate.batchUpdate("DELETE FROM person WHERE id = ?", new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                ps.setLong(1, entities.iterator().next().getId());
+        try(Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            for (Person person : entities) {
+                session.createQuery("delete from Person p where p.id = :id", Person.class)
+                        .setParameter("id", person.getId())
+                        .executeUpdate();
+                session.getTransaction().commit();
             }
-
-            @Override
-            public int getBatchSize() {
-                return people.size();
-            }
-        });
+        }
     }
 
     @Override
     public void deleteAll() {
-        jdbcTemplate.update("TRUNCATE person");
+//        jdbcTemplate.update("TRUNCATE person");
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.createQuery("delete from Person p").executeUpdate();
+            session.getTransaction().commit();
+        }
     }
 
 
-    public void update(int id, Person updatedPerson) {
-        jdbcTemplate.update("UPDATE person SET full_name =?, year_of_birth = ? WHERE id = ?",
-                updatedPerson.getFullName(), updatedPerson.getYearOfBirth(), id);
-    }
 
-    public List<Book> getBooksByPersonId(int id) {
-        return jdbcTemplate.query("SELECT * FROM book WHERE person_id =?", new BookMapper(), id);
-    }
+
+//    public List<Book> getBooksByPersonId(int id) {
+//        try (Session session = sessionFactory.openSession()) {
+//            Person person = session.get(Person.class, id);
+//            return person.getBooks();
+//        }
+//    }
 }
