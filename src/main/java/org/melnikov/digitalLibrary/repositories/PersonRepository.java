@@ -7,6 +7,8 @@ import org.melnikov.digitalLibrary.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,28 +28,27 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
     }
 
     @Override
+    @Transactional
     public <S extends Person> S save(S person) {
 
         try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
             session.persist(person);
-            session.getTransaction().commit();
         }
         return person;
     }
 
     @Override
+    @Transactional
     public <S extends Person> List<S> saveAll(Iterable<S> entities) {
-        List<S> people = new ArrayList<>((Collection<S>) entities);
         try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+            List<S> people = new ArrayList<>((Collection<S>) entities);
             people.forEach(session::persist);
-            session.getTransaction().commit();
+            return people;
         }
-        return people;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Person> findById(Integer id) {
         try (Session session = sessionFactory.openSession()) {
             Person person = session.get(Person.class, id);
@@ -57,6 +58,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsById(Integer id) {
         try(Session session = sessionFactory.openSession()) {
             Person person = session.get(Person.class, id);
@@ -65,6 +67,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Person> findAll() {
       try (Session session = sessionFactory.openSession()) {
           return session.createQuery("from Person p", Person.class).getResultList();
@@ -72,6 +75,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Person> findAllById(Iterable<Integer> ids) {
         try(Session session = sessionFactory.openSession()) {
             return session.createQuery("from Person p where p.id in (:ids)", Person.class)
@@ -80,6 +84,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
         }
     }
 
+    @Transactional(readOnly = true)
     public Optional<Person> findByName(String fullName) {
         try(Session session = sessionFactory.openSession()) {
             return session.createQuery("from Person p where p.fullName = :fullName", Person.class)
@@ -90,6 +95,7 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long count() {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("select count(p) from Person p", Long.class)
@@ -97,79 +103,62 @@ public class PersonRepository implements ListCrudRepository<Person, Integer> {
         }
     }
 
+    @Transactional
     public void update(int id, Person updatedPerson) {
 
         try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
             Person person = session.get(Person.class, id);
             person.setFullName(updatedPerson.getFullName());
             person.setYearOfBirth(updatedPerson.getYearOfBirth());
-            session.merge(person);
-            session.getTransaction().commit();
         }
     }
 
     @Override
+    @Transactional
     public void deleteById(Integer id) {
         try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
             Person person = session.get(Person.class, id);
             session.remove(person);
-            session.getTransaction().commit();
         }
 
     }
 
     @Override
+    @Transactional
     public void delete(Person personToDelete) {
         try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
             Person person = session.get(Person.class, personToDelete.getId());
             session.remove(person);
-            session.getTransaction().commit();
         }
     }
 
     @Override
+    @Transactional
     public void deleteAllById(Iterable<? extends Integer> ints) {
         try(Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
             session.createQuery("delete from Person p where p.id in (:ids)", Person.class)
                     .setParameter("ids", ints);
-            session.getTransaction().commit();
         }
     }
 
     @Override
+    @Transactional
     public void deleteAll(Iterable<? extends Person> entities) {
         try(Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
             for (Person person : entities) {
                 session.createQuery("delete from Person p where p.id = :id", Person.class)
                         .setParameter("id", person.getId())
                         .executeUpdate();
-                session.getTransaction().commit();
             }
         }
     }
 
     @Override
+    @Transactional
     public void deleteAll() {
 //        jdbcTemplate.update("TRUNCATE person");
         try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
             session.createQuery("delete from Person p").executeUpdate();
-            session.getTransaction().commit();
         }
     }
-
-
-
-
-//    public List<Book> getBooksByPersonId(int id) {
-//        try (Session session = sessionFactory.openSession()) {
-//            Person person = session.get(Person.class, id);
-//            return person.getBooks();
-//        }
-//    }
 }

@@ -1,7 +1,6 @@
 package org.melnikov.digitalLibrary.controllers;
 
 import jakarta.validation.Valid;
-import org.melnikov.digitalLibrary.models.Book;
 import org.melnikov.digitalLibrary.models.Person;
 import org.melnikov.digitalLibrary.repositories.PersonRepository;
 import org.melnikov.digitalLibrary.util.PersonValidator;
@@ -11,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
