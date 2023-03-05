@@ -19,14 +19,14 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/books")
 public class BooksController {
-    private final BooksRepository booksRepository;
-    private final PersonRepository personRepository;
 
-    @Autowired
-    public BooksController(BooksRepository booksRepository,
-                           PersonRepository personRepository) {
-        this.booksRepository = booksRepository;
+
+    private final PersonRepository personRepository;
+    private final BooksRepository booksRepository;
+
+    public BooksController(PersonRepository personRepository, BooksRepository booksRepository) {
         this.personRepository = personRepository;
+        this.booksRepository = booksRepository;
     }
 
     @GetMapping()
